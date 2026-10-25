@@ -1,0 +1,12 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+  - role: worker
+  - role: worker
+kubeadmConfigPatches:
+  - |
+    kind: KubeProxyConfiguration
+    iptables:
+      minSyncPeriod: 10s   # 틈을 일부러 벌리는 값
+      syncPeriod: 30s

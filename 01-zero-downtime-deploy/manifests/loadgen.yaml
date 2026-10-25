@@ -1,0 +1,26 @@
+# 클러스터 안에서 Service(web)로 요청을 계속 보내는 부하 생성기 (폐쇄형, 워커 2개, 요청 간격 1초)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: loadgen
+spec:
+  restartPolicy: Never
+  containers:
+    - name: curl
+      image: curlimages/curl:8.10.1
+      command: ["sh", "-c"]
+      args:
+        - |
+          worker() {
+            id=$1
+            while true; do
+              start=$(date +%T)
+              out=$(curl -sS -m 15 -o /tmp/body$id -w "%{http_code} %{time_total}" http://web/slow 2>/tmp/err$id)
+              rc=$?
+              echo "$start w$id code=${out%% *} time=${out##* } rc=$rc err=$(tr -d '\n' </tmp/err$id) body=$(head -c 60 /tmp/body$id)"
+              sleep 1
+            done
+          }
+          worker 1 &
+          worker 2 &
+          wait
